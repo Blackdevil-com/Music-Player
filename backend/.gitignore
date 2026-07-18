@@ -34,4 +34,8 @@ build/
 
 
 ### Audio Storage folder ###
+# Ignore everything inside the storage folder
 storage/
+
+# Except the .gitkeep file so the folder structure stays on GitHub
+!storage/songs/.gitkeep
