@@ -9,9 +9,14 @@ import com.scorpix.music_player.mapper.SongMapper;
 import com.scorpix.music_player.repository.AlbumRepository;
 import com.scorpix.music_player.repository.ArtistRepository;
 import com.scorpix.music_player.repository.SongRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Service
@@ -77,5 +82,16 @@ public class SongService {
     public void deleteSongById(Long id) {
         Song song = songRepository.findById(id).orElseThrow(() -> new RuntimeException("No such song"));
         songRepository.delete(song);
+    }
+
+    public ResponseEntity<?> streamSong(Long id, String rangeHeader) {
+
+        try {
+            Song song = songRepository.findById(id).orElseThrow(() -> new RuntimeException("No such song"));
+            Path path = Paths.get(song.getFilePath());
+            return fileStorageService.streamFile(path, rangeHeader);
+        }catch (IOException e) {
+            throw new RuntimeException("File streaming is stopped");
+        }
     }
 }

@@ -18,5 +18,4 @@ public class SongDto {
     private Long albumId;
     private String genre;
     private LocalDateTime createAt;
-    private String filePath;
 }

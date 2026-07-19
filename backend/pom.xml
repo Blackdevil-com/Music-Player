@@ -92,11 +92,22 @@
 
 	<build>
 		<plugins>
+
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.11.0</version>
-
 				<configuration>
 					<source>17</source>
 					<target>17</target>
@@ -117,23 +128,6 @@
 
 					</annotationProcessorPaths>
 				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
 				<executions>
 					<execution>
 						<id>default-compile</id>
@@ -141,6 +135,7 @@
 						<goals>
 							<goal>compile</goal>
 						</goals>
+
 						<configuration>
 							<annotationProcessorPaths>
 								<path>
@@ -164,6 +159,7 @@
 								</path>
 							</annotationProcessorPaths>
 						</configuration>
+
 					</execution>
 				</executions>
 			</plugin>

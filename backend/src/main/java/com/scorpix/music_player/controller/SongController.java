@@ -3,10 +3,12 @@ package com.scorpix.music_player.controller;
 import com.scorpix.music_player.dto.SongDto;
 import com.scorpix.music_player.service.SongService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -19,8 +21,8 @@ public class SongController {
     }
 
 
-    @PostMapping(value = "/songs")
-    public ResponseEntity<SongDto> addSong(@RequestPart SongDto songDto , @RequestPart MultipartFile file) {
+    @PostMapping(value = "/songs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SongDto> addSong(@RequestPart("songDto") SongDto songDto , @RequestPart("file") MultipartFile file) {
         return new ResponseEntity<>(
                 songService.addSong(songDto, file), HttpStatus.CREATED);
     }
@@ -39,5 +41,11 @@ public class SongController {
     public ResponseEntity<HttpStatus> deleteSongById(@PathVariable Long id){
         songService.deleteSongById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/songs/{id}/stream")
+    public ResponseEntity<?> streamSong(@PathVariable Long id,
+                                        @RequestHeader(value = "Range", required = false) String rangeHeader) throws IOException {
+        return songService.streamSong(id, rangeHeader);
     }
 }

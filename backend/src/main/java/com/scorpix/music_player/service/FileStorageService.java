@@ -4,13 +4,18 @@ import com.scorpix.music_player.dto.FileMetaData;
 import jakarta.annotation.PostConstruct;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -77,6 +82,8 @@ public class FileStorageService {
                 throw new RuntimeException("Could not store file outside current destination");
             }
 
+            streamData = file.getInputStream();
+
             try {
                 Files.copy(streamData, destinationFile, StandardCopyOption.REPLACE_EXISTING);
                 return new FileMetaData(destinationFile.toAbsolutePath().toString(), file.getSize(), file.getContentType());
@@ -85,8 +92,62 @@ public class FileStorageService {
             }
         } catch (RuntimeException e) {
             throw new RuntimeException("Failed to store file" + originalFileName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
 
+    }
+
+    public ResponseEntity<?> streamFile(Path path, String rangeHeader) throws IOException {
+        if(!Files.exists(path)) {
+            throw new FileNotFoundException("File not found");
+        }
+        long fileLength = Files.size(path);
+
+        // No Range header
+        if(rangeHeader == null || !rangeHeader.startsWith("bytes")) {
+            Resource resource = new FileSystemResource(path);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(Files.probeContentType(path)))
+                    .contentLength(fileLength)
+                    .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                    .body(resource);
+        }
+
+        // Parse Range header
+        String [] ranges = rangeHeader.substring(6).split("-");
+
+        long start = Long.parseLong(ranges[0]);
+        long end = (ranges.length > 1 && !ranges[1].isEmpty())
+                ? Long.parseLong(ranges[1])
+                : fileLength - 1;
+
+        if(end >= fileLength) {
+            end = fileLength - 1;
+        }
+
+        long contentLength = end - start + 1;
+        long maxChunk = 1024 * 1024;
+        end = Math.min(end, start + maxChunk - 1);
+
+        // Read range request
+        try(RandomAccessFile randomAccessFile = new RandomAccessFile(path.toFile(), "r") ){
+            randomAccessFile.seek(start);
+            byte [] data = new byte[(int) contentLength];
+            randomAccessFile.readFully(data);
+
+            ByteArrayResource resource = new ByteArrayResource(data);
+
+            return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
+                    .contentType(MediaType.parseMediaType(Files.probeContentType(path)))
+                    .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength))
+                    .header(HttpHeaders.CONTENT_RANGE,
+                            "bytes " + start + "-" + end + "/" + fileLength)
+                    .body(resource);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

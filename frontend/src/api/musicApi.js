@@ -23,8 +23,17 @@ export const songApi = {
   getById: (id) =>
     fetch(`${BASE_URL}/songs/${id}`).then(handleResponse),
 
+  /**
+   * Returns the streaming URL for a song.
+   * The HTML5 <audio> element natively sends HTTP Range headers to this URL.
+   * The backend's FileStorageService.streamFile() responds with 206 Partial
+   * Content — enabling seek, scrub, and progressive playback.
+   *
+   * Route: GET /api/v1/songs/:id/stream
+   */
+  getStreamUrl: (id) => `${BASE_URL}/songs/${id}/stream`,
 
-  /** POST /api/v1/songs/byfile — multipart */
+  /** POST /api/v1/songs — multipart form (file is required by backend) */
   createWithFile: (songDto, file) => {
     const form = new FormData();
     form.append('songDto', new Blob([JSON.stringify(songDto)], { type: 'application/json' }));

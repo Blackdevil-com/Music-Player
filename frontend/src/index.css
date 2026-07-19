@@ -888,3 +888,342 @@ tbody tr:last-child td {
   .main-content { margin-left: 0; }
   .stats-grid { grid-template-columns: 1fr; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Audio Player  —  sticky bottom bar
+   ════════════════════════════════════════════════════════════════════ */
+
+.audio-player {
+  position: fixed;
+  bottom: 0;
+  left: 260px;           /* match sidebar width */
+  right: 0;
+  height: 80px;
+  background: rgba(14, 16, 30, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(124,58,237,0.35);
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.6), 0 -1px 0 rgba(124,58,237,0.2);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  z-index: 200;
+  animation: playerSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes playerSlideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* give page body breathing room when player is open */
+.main-content.player-open .page-body {
+  padding-bottom: 100px;
+}
+
+/* ── Song info (left 1/3) ── */
+.ap-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.ap-disc {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(124,58,237,0.5);
+  overflow: hidden;
+}
+
+.ap-disc-icon {
+  font-size: 20px;
+  display: inline-block;
+  animation: discSpin 4s linear infinite;
+}
+
+@keyframes discSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.ap-meta {
+  min-width: 0;
+}
+
+.ap-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 190px;
+}
+
+.ap-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ap-genre {
+  background: rgba(124,58,237,0.2);
+  color: #a78bfa;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+/* ── Center controls ── */
+.ap-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Transport row */
+.ap-transport {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ap-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.ap-btn:hover:not(:disabled) {
+  background: rgba(124,58,237,0.15);
+  color: var(--text-primary);
+}
+
+.ap-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.ap-btn-sm {
+  font-size: 13px;
+  padding: 5px 8px;
+}
+
+.ap-btn-play {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  color: white;
+  font-size: 16px;
+  box-shadow: 0 0 16px rgba(124,58,237,0.5);
+  flex-shrink: 0;
+}
+
+.ap-btn-play:hover:not(:disabled) {
+  background: var(--gradient-primary);
+  transform: scale(1.08);
+  box-shadow: 0 0 24px rgba(124,58,237,0.7);
+}
+
+/* Progress bar row */
+.ap-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.ap-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  min-width: 34px;
+}
+
+.ap-time:last-child { text-align: right; }
+
+.ap-progress {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 9999px;
+  cursor: pointer;
+  position: relative;
+  overflow: visible;
+  transition: height var(--transition);
+}
+
+.ap-progress:hover,
+.ap-progress:focus {
+  height: 6px;
+  outline: none;
+}
+
+/* Buffer track */
+.ap-buffered {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  border-radius: 9999px;
+  background: rgba(124,58,237,0.3);
+  pointer-events: none;
+  transition: width 0.3s ease;
+}
+
+/* Played track + thumb */
+.ap-played {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  border-radius: 9999px;
+  background: var(--gradient-primary);
+  pointer-events: none;
+  transition: width 0.1s linear;
+}
+
+.ap-thumb {
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 0 8px rgba(124,58,237,0.8);
+  transition: transform var(--transition);
+}
+
+.ap-progress:hover .ap-thumb,
+.ap-progress:focus .ap-thumb {
+  transform: translateY(-50%) scale(1);
+}
+
+/* Error */
+.ap-error {
+  font-size: 11px;
+  color: #f87171;
+  text-align: center;
+}
+
+/* ── Right: volume + close ── */
+.ap-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 180px;
+  justify-content: flex-end;
+}
+
+.ap-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.12);
+  outline: none;
+  cursor: pointer;
+}
+
+.ap-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-purple-light);
+  box-shadow: 0 0 6px rgba(124,58,237,0.6);
+  cursor: pointer;
+}
+
+.ap-volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-purple-light);
+  cursor: pointer;
+}
+
+/* ── Playing row highlight ── */
+tbody tr.is-playing {
+  background: rgba(124,58,237,0.12) !important;
+}
+
+tbody tr.is-playing td:first-child {
+  color: var(--accent-purple-light);
+  font-weight: 700;
+}
+
+/* ── Play button in table ── */
+.btn-play {
+  background: rgba(124,58,237,0.18);
+  color: var(--accent-purple-light);
+  border: 1px solid rgba(124,58,237,0.3);
+}
+
+.btn-play:hover {
+  background: var(--accent-purple);
+  color: white;
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 12px rgba(124,58,237,0.4);
+}
+
+.btn-play.is-playing {
+  background: var(--gradient-primary);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 0 12px rgba(124,58,237,0.4);
+}
+
+/* ── Responsive audio player ── */
+@media (max-width: 768px) {
+  .audio-player {
+    left: 0;
+    height: auto;
+    min-height: 70px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .ap-info { width: auto; flex: 1; }
+  .ap-right { width: auto; }
+  .ap-center { width: 100%; order: 3; }
+}
+

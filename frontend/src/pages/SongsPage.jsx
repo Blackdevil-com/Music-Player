@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { songApi } from '../api/musicApi';
 import ConfirmDialog from '../components/ConfirmDialog';
+import AudioPlayer from '../components/AudioPlayer';
 
-// ── Add/Edit Song Modal ──────────────────────────────────────────────────────
-function SongModal({ mode, initialData, artists, albums, onClose, onSave }) {
+// ── Add Song Modal ────────────────────────────────────────────────────────────
+function SongModal({ artists, albums, onClose, onSave }) {
   const [form, setForm] = useState({
-    title: '', artistId: '', albumId: '', genre: '', filePath: '',
-    ...(initialData || {}),
+    title: '', artistId: '', albumId: '', genre: '',
   });
   const [file, setFile] = useState(null);
-  const [useFile, setUseFile] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -17,6 +16,7 @@ function SongModal({ mode, initialData, artists, albums, onClose, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) return;
+    if (!file) { alert('Please select an audio file to upload.'); return; }
     setLoading(true);
     try {
       const dto = {
@@ -24,13 +24,8 @@ function SongModal({ mode, initialData, artists, albums, onClose, onSave }) {
         artistId: form.artistId ? Number(form.artistId) : null,
         albumId: form.albumId ? Number(form.albumId) : null,
         genre: form.genre || null,
-        filePath: form.filePath || null,
       };
-      if (useFile && file) {
-        await songApi.createWithFile(dto, file);
-      } else {
-        await songApi.create(dto);
-      }
+      await songApi.createWithFile(dto, file);
       onSave();
     } catch (err) {
       alert(err.message);
@@ -44,7 +39,7 @@ function SongModal({ mode, initialData, artists, albums, onClose, onSave }) {
       <div className="modal">
         <div className="modal-header">
           <h2 className="modal-title" id="song-modal-title">
-            <span>🎵</span> {mode === 'add' ? 'Add New Song' : 'Edit Song'}
+            <span>🎵</span> Add New Song
           </h2>
           <button className="modal-close" onClick={onClose} aria-label="Close modal">✕</button>
         </div>
@@ -97,54 +92,32 @@ function SongModal({ mode, initialData, artists, albums, onClose, onSave }) {
             />
           </div>
 
-          {/* Toggle: JSON vs File upload */}
+          {/* File upload — required by backend POST /api/v1/songs (multipart) */}
           <div className="form-group">
-            <div className="tabs" style={{ marginBottom: 12 }}>
-              <button type="button" className={`tab-btn ${!useFile ? 'active' : ''}`} onClick={() => setUseFile(false)} id="tab-filepath">
-                File Path
-              </button>
-              <button type="button" className={`tab-btn ${useFile ? 'active' : ''}`} onClick={() => setUseFile(true)} id="tab-upload">
-                Upload File
-              </button>
-            </div>
-
-            {!useFile ? (
-              <>
-                <label className="form-label" htmlFor="song-filepath">File Path</label>
-                <input
-                  id="song-filepath"
-                  name="filePath"
-                  className="form-input"
-                  placeholder="e.g. storage/songs/track.mp3"
-                  value={form.filePath}
-                  onChange={handleChange}
-                />
-              </>
-            ) : (
-              <label className="file-upload-area" htmlFor="song-file-input">
-                <div className="file-upload-icon">🎧</div>
-                <div className="file-upload-text">
-                  <strong>Click to browse</strong> or drag & drop
-                </div>
-                <div className="file-upload-text" style={{ fontSize: 11, marginTop: 4 }}>
-                  MP3, WAV, FLAC, OGG (max 50 MB)
-                </div>
-                {file && <div className="file-selected">✓ {file.name}</div>}
-                <input
-                  id="song-file-input"
-                  type="file"
-                  accept="audio/*"
-                  onChange={(e) => setFile(e.target.files[0])}
-                />
-              </label>
-            )}
+            <label className="form-label">Audio File <span>*</span></label>
+            <label className="file-upload-area" htmlFor="song-file-input">
+              <div className="file-upload-icon">🎧</div>
+              <div className="file-upload-text">
+                <strong>Click to browse</strong> or drag &amp; drop
+              </div>
+              <div className="file-upload-text" style={{ fontSize: 11, marginTop: 4 }}>
+                MP3, WAV, FLAC (max 50 MB)
+              </div>
+              {file && <div className="file-selected">✓ {file.name}</div>}
+              <input
+                id="song-file-input"
+                type="file"
+                accept=".mp3,.wav,.flac,audio/*"
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+            </label>
           </div>
 
           <div className="modal-footer">
             <button type="button" className="btn btn-ghost" onClick={onClose} id="song-modal-cancel">Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={loading} id="song-modal-save">
               {loading ? <span className="spinner" /> : '🎵'}
-              {mode === 'add' ? 'Add Song' : 'Save Changes'}
+              Add Song
             </button>
           </div>
         </form>
@@ -153,18 +126,23 @@ function SongModal({ mode, initialData, artists, albums, onClose, onSave }) {
   );
 }
 
-// ── Songs Page ───────────────────────────────────────────────────────────────
+// ── Songs Page ────────────────────────────────────────────────────────────────
 export default function SongsPage({ songs, artists, albums, loading, onRefresh, showToast }) {
   const [showAdd, setShowAdd] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState('');
 
+  // ── Streaming / playback state ────────────────────────────────────────────
+  const [nowPlaying, setNowPlaying] = useState(null); // song object currently loaded
+  const [playingId, setPlayingId]   = useState(null); // id of song in player
+
   const filtered = songs.filter((s) =>
     [s.title, s.artistName, s.albumName, s.genre]
       .some((v) => v?.toLowerCase().includes(search.toLowerCase()))
   );
 
+  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleSaved = () => {
     setShowAdd(false);
     showToast('Song added successfully!', 'success');
@@ -175,6 +153,11 @@ export default function SongsPage({ songs, artists, albums, loading, onRefresh, 
     setDeleting(true);
     try {
       await songApi.delete(deleteTarget.id);
+      // if deleted song was playing, close player
+      if (playingId === deleteTarget.id) {
+        setNowPlaying(null);
+        setPlayingId(null);
+      }
       setDeleteTarget(null);
       showToast('Song deleted.', 'success');
       onRefresh();
@@ -185,6 +168,29 @@ export default function SongsPage({ songs, artists, albums, loading, onRefresh, 
     }
   };
 
+  const handlePlay = (song) => {
+    setNowPlaying(song);
+    setPlayingId(song.id);
+  };
+
+  const handlePlayerClose = () => {
+    setNowPlaying(null);
+    setPlayingId(null);
+  };
+
+  // Navigate prev/next within the filtered list
+  const currentIdx = filtered.findIndex((s) => s.id === playingId);
+  const hasPrev = currentIdx > 0;
+  const hasNext = currentIdx >= 0 && currentIdx < filtered.length - 1;
+
+  const handlePrev = () => {
+    if (hasPrev) handlePlay(filtered[currentIdx - 1]);
+  };
+  const handleNext = () => {
+    if (hasNext) handlePlay(filtered[currentIdx + 1]);
+  };
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
   const genreBadgeClass = (genre) => {
     const map = { Pop: 'cyan', Rock: 'pink', Jazz: 'orange', Classical: 'purple', 'Hip-Hop': 'green' };
     return `badge badge-${map[genre] || 'purple'}`;
@@ -207,7 +213,8 @@ export default function SongsPage({ songs, artists, albums, loading, onRefresh, 
         </div>
       </div>
 
-      <div className="page-body">
+      {/* Add bottom padding when player is visible */}
+      <div className="page-body" style={{ paddingBottom: nowPlaying ? 100 : undefined }}>
         <div className="table-wrapper">
           <div className="table-toolbar">
             <div className="search-input-wrap">
@@ -257,47 +264,64 @@ export default function SongsPage({ songs, artists, albums, loading, onRefresh, 
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((song, idx) => (
-                    <tr key={song.id} id={`song-row-${song.id}`}>
-                      <td style={{ color: 'var(--text-muted)', width: 48 }}>{idx + 1}</td>
-                      <td>
-                        <div className="entity-cell">
-                          <div className="avatar avatar-purple" aria-hidden="true">
-                            {song.title?.[0]?.toUpperCase() || '?'}
+                  filtered.map((song, idx) => {
+                    const isThisPlaying = song.id === playingId;
+                    return (
+                      <tr key={song.id} id={`song-row-${song.id}`} className={isThisPlaying ? 'is-playing' : ''}>
+                        <td style={{ color: 'var(--text-muted)', width: 48 }}>
+                          {isThisPlaying
+                            ? <span style={{ color: 'var(--accent-purple-light)' }}>♪</span>
+                            : idx + 1
+                          }
+                        </td>
+                        <td>
+                          <div className="entity-cell">
+                            <div className="avatar avatar-purple" aria-hidden="true">
+                              {song.title?.[0]?.toUpperCase() || '?'}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 600 }}>{song.title}</div>
+                              {song.filePath && (
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                                  📁 {song.filePath.split(/[\\/]/).pop()}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <div style={{ fontWeight: 600 }}>{song.title}</div>
-                            {song.filePath && (
-                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                                📁 {song.filePath.split('/').pop()}
-                              </div>
-                            )}
+                        </td>
+                        <td>{song.artistName || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                        <td>{song.albumName  || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                        <td>
+                          {song.genre
+                            ? <span className={genreBadgeClass(song.genre)}>{song.genre}</span>
+                            : <span style={{ color: 'var(--text-muted)' }}>—</span>
+                          }
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{formatDate(song.createAt)}</td>
+                        <td>
+                          <div className="actions-cell">
+                            {/* ▶ Stream button — only shows if song has a file */}
+                            <button
+                              id={`play-song-${song.id}`}
+                              className={`btn btn-play btn-sm ${isThisPlaying ? 'is-playing' : ''}`}
+                              onClick={() => handlePlay(song)}
+                              title={isThisPlaying ? `Now playing: ${song.title}` : `Stream "${song.title}"`}
+                            >
+                              {isThisPlaying ? '♪ Playing' : '▶ Play'}
+                            </button>
+                            <button
+                              id={`delete-song-${song.id}`}
+                              className="btn btn-danger btn-sm"
+                              onClick={() => setDeleteTarget(song)}
+                              title={`Delete "${song.title}"`}
+                            >
+                              🗑️
+                            </button>
                           </div>
-                        </div>
-                      </td>
-                      <td>{song.artistName || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-                      <td>{song.albumName  || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-                      <td>
-                        {song.genre
-                          ? <span className={genreBadgeClass(song.genre)}>{song.genre}</span>
-                          : <span style={{ color: 'var(--text-muted)' }}>—</span>
-                        }
-                      </td>
-                      <td style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{formatDate(song.createAt)}</td>
-                      <td>
-                        <div className="actions-cell">
-                          <button
-                            id={`delete-song-${song.id}`}
-                            className="btn btn-danger btn-sm"
-                            onClick={() => setDeleteTarget(song)}
-                            title={`Delete "${song.title}"`}
-                          >
-                            🗑️ Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -305,9 +329,21 @@ export default function SongsPage({ songs, artists, albums, loading, onRefresh, 
         </div>
       </div>
 
+      {/* ── Audio Player bar ──────────────────────────────────────────────── */}
+      {nowPlaying && (
+        <AudioPlayer
+          song={nowPlaying}
+          streamUrl={songApi.getStreamUrl(nowPlaying.id)}
+          onClose={handlePlayerClose}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+        />
+      )}
+
       {showAdd && (
         <SongModal
-          mode="add"
           artists={artists}
           albums={albums}
           onClose={() => setShowAdd(false)}
