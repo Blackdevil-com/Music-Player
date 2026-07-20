@@ -5,6 +5,7 @@ import com.scorpix.music_player.dto.SongDto;
 import com.scorpix.music_player.entity.Album;
 import com.scorpix.music_player.entity.Artist;
 import com.scorpix.music_player.entity.Song;
+import com.scorpix.music_player.exception.ResourceNotFoundException;
 import com.scorpix.music_player.mapper.SongMapper;
 import com.scorpix.music_player.repository.AlbumRepository;
 import com.scorpix.music_player.repository.ArtistRepository;
@@ -13,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,27 +36,13 @@ public class SongService {
         this.fileStorageService = fileStorageService;
     }
 
-    public SongDto addSong(SongDto songDto) {
-        Song song = songMapper.toEntity(songDto);
-
-        Artist artist = artistRepository.findById(songDto.getArtistId())
-                .orElseThrow(() -> new RuntimeException("Artist not found"));
-        Album album = albumRepository.findById(songDto.getAlbumId())
-                .orElseThrow(() -> new RuntimeException("Album not found"));
-
-        song.setArtist(artist);
-        song.setAlbum(album);
-        songRepository.save(song);
-        return songMapper.toDto(song);
-    }
-
     public SongDto addSong(SongDto songDto, MultipartFile file) {
         Song song = songMapper.toEntity(songDto);
 
         Artist artist = artistRepository.findById(songDto.getArtistId())
-                .orElseThrow(() -> new RuntimeException("Artist not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Artist not found"));
         Album album = albumRepository.findById(songDto.getAlbumId())
-                .orElseThrow(() -> new RuntimeException("Album not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Album not found"));
 
         song.setArtist(artist);
         song.setAlbum(album);
@@ -76,18 +62,18 @@ public class SongService {
     }
 
     public SongDto getSongById(Long id) {
-        return songMapper.toDto(songRepository.findById(id).orElseThrow(() -> new RuntimeException("No such song")));
+        return songMapper.toDto(songRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No such song")));
     }
 
     public void deleteSongById(Long id) {
-        Song song = songRepository.findById(id).orElseThrow(() -> new RuntimeException("No such song"));
+        Song song = songRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No such song"));
         songRepository.delete(song);
     }
 
     public ResponseEntity<?> streamSong(Long id, String rangeHeader) {
 
         try {
-            Song song = songRepository.findById(id).orElseThrow(() -> new RuntimeException("No such song"));
+            Song song = songRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No such song"));
             Path path = Paths.get(song.getFilePath());
             return fileStorageService.streamFile(path, rangeHeader);
         }catch (IOException e) {

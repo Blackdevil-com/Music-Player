@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -45,7 +44,7 @@ public class SongController {
 
     @GetMapping("/songs/{id}/stream")
     public ResponseEntity<?> streamSong(@PathVariable Long id,
-                                        @RequestHeader(value = "Range", required = false) String rangeHeader) throws IOException {
+                                        @RequestHeader(value = "Range", required = false) String rangeHeader) {
         return songService.streamSong(id, rangeHeader);
     }
 }

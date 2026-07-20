@@ -1,6 +1,7 @@
 package com.scorpix.music_player.service;
 
 import com.scorpix.music_player.dto.FileMetaData;
+import com.scorpix.music_player.exception.ResourceNotFoundException;
 import jakarta.annotation.PostConstruct;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,7 +76,7 @@ public class FileStorageService {
 
         if(!allowedMimeType.contains(actualMimeFormat)) throw new RuntimeException("Malicious file content detected");
 
-        String uniqueFileName = UUID.randomUUID().toString() + "." + extension;
+        String uniqueFileName = UUID.randomUUID() + "." + extension;
         try {
             Path destinationFile = Path.of(storageLocation).resolve(uniqueFileName);
             if(!destinationFile.getParent().equals(Path.of(storageLocation))){
@@ -99,9 +100,9 @@ public class FileStorageService {
 
     }
 
-    public ResponseEntity<?> streamFile(Path path, String rangeHeader) throws IOException {
+    public ResponseEntity<?> streamFile(Path path, String rangeHeader) throws IOException{
         if(!Files.exists(path)) {
-            throw new FileNotFoundException("File not found");
+            throw new ResourceNotFoundException("File not found");
         }
         long fileLength = Files.size(path);
 
@@ -127,9 +128,9 @@ public class FileStorageService {
             end = fileLength - 1;
         }
 
-        long contentLength = end - start + 1;
         long maxChunk = 1024 * 1024;
         end = Math.min(end, start + maxChunk - 1);
+        long contentLength = end - start + 1;
 
         // Read range request
         try(RandomAccessFile randomAccessFile = new RandomAccessFile(path.toFile(), "r") ){

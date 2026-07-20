@@ -2,6 +2,7 @@ package com.scorpix.music_player.service;
 
 import com.scorpix.music_player.dto.ArtistDto;
 import com.scorpix.music_player.entity.Artist;
+import com.scorpix.music_player.exception.ResourceNotFoundException;
 import com.scorpix.music_player.mapper.ArtistMapper;
 import com.scorpix.music_player.repository.ArtistRepository;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class ArtistService {
 
     public ArtistDto deleteArtist(Long id) {
         Artist artist = artistRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Artist not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Artist not found"));
         artistRepository.delete(artist);
         return artistMapper.toDto(artist);
     }
