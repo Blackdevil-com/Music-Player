@@ -11,10 +11,11 @@ import org.mapstruct.Mapping;
         uses = SongMapper.class)
 public interface PlaylistMapper {
 
-    @Mapping(target = "name", source = "name")
     Playlist toEntity(PlaylistRequest playlistRequest);
 
+//    @Mapping(target = "songCount", source = "playlist.getSongs().size()")
     PlaylistSummaryResponse toDto(Playlist playlist);
 
+    @Mapping(source = "songCount", target = "songCount")
     PlaylistResponse toDetailDto(Playlist playlist);
 }

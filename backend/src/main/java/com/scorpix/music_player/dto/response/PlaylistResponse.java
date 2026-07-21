@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -20,7 +21,8 @@ public class PlaylistResponse {
     private String description;
     private Boolean isPublic;
     private String createdBy;
-    private String createdAt;
+    private LocalDateTime createdAt;
+    private Integer songCount;
 
     private List<SongDto> songs;
 }

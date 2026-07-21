@@ -1,7 +1,6 @@
 package com.scorpix.music_player.service;
 
 import com.scorpix.music_player.dto.AlbumDto;
-import com.scorpix.music_player.dto.ArtistDto;
 import com.scorpix.music_player.entity.Album;
 import com.scorpix.music_player.mapper.AlbumMapper;
 import com.scorpix.music_player.repository.AlbumRepository;

@@ -1,9 +1,7 @@
 package com.scorpix.music_player.mapper;
 
 import com.scorpix.music_player.dto.SongDto;
-import com.scorpix.music_player.entity.Artist;
 import com.scorpix.music_player.entity.Song;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

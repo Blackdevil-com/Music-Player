@@ -10,6 +10,7 @@ import com.scorpix.music_player.mapper.PlaylistMapper;
 import com.scorpix.music_player.repository.PlaylistRepository;
 import com.scorpix.music_player.repository.SongRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -32,29 +33,40 @@ public class PlaylistService {
         return playlistMapper.toDto(playlist);
     }
 
-    public List<PlaylistResponse> getAllPlaylists() {
+    public List<PlaylistSummaryResponse> getAllPlaylists() {
         List<Playlist> playlists = playlistRepository.findAll();
-        return playlists.stream().map(playlistMapper::toDetailDto).toList();
+        return playlists.stream().map(playlistMapper::toDto).toList();
     }
 
-    public PlaylistSummaryResponse getPlaylistById(Long id) {
+    public PlaylistResponse getPlaylistById(Long id) {
         Playlist playlist = playlistRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No such playlist"));
-        return playlistMapper.toDto(playlist);
+        return playlistMapper.toDetailDto(playlist);
     }
 
     public PlaylistResponse addSongToPlaylist(Long playlistId, Long songId) {
         Playlist playlist = playlistRepository.findById(playlistId).orElseThrow(() -> new ResourceNotFoundException("No such playlist"));
         Song song = songRepository.findById(songId).orElseThrow( () -> new ResourceNotFoundException("No such song"));
 
-        if(!playlist.getSongs().contains(song))
+        if(!playlist.getSongs().contains(song)) {
             playlist.getSongs().add(song);
+        }
 
         playlistRepository.save(playlist);
         return playlistMapper.toDetailDto(playlist);
     }
 
     public void deletePlaylistById(Long id) {
-        playlistRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No such playlist"));
-        playlistRepository.deleteById(id);
+        Playlist playlist = playlistRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No such playlist"));
+
+        playlistRepository.delete(playlist);
+    }
+
+    @Transactional
+    public void deleteSongFromPlaylist(Long playlistId, Long songId) {
+
+        Playlist playlist = playlistRepository.findById(playlistId).orElseThrow(() -> new ResourceNotFoundException("No such playlist"));
+        if(!playlist.getSongs().removeIf(song -> song.getId().equals(songId)))
+            throw new ResourceNotFoundException("Song not found in playlist");
     }
 }

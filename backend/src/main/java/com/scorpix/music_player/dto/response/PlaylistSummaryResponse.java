@@ -17,4 +17,5 @@ public class PlaylistSummaryResponse {
     private Boolean isPublic;
     private String createdBy;
     private String createdAt;
+    private Integer songCount;
 }

@@ -5,6 +5,7 @@ import com.scorpix.music_player.dto.SongDto;
 import com.scorpix.music_player.entity.Album;
 import com.scorpix.music_player.entity.Artist;
 import com.scorpix.music_player.entity.Song;
+import com.scorpix.music_player.exception.FileStreamingException;
 import com.scorpix.music_player.exception.ResourceNotFoundException;
 import com.scorpix.music_player.mapper.SongMapper;
 import com.scorpix.music_player.repository.AlbumRepository;
@@ -77,7 +78,7 @@ public class SongService {
             Path path = Paths.get(song.getFilePath());
             return fileStorageService.streamFile(path, rangeHeader);
         }catch (IOException e) {
-            throw new RuntimeException("File streaming is stopped");
+            throw new FileStreamingException("Failed to stream audio file");
         }
     }
 }

@@ -8,7 +8,9 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -26,6 +28,11 @@ public class Playlist {
     private String createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer songCount;
+
+    public int getSongCount() {
+        return songCount == null ? 0 : songs.size();
+    }
 
     @ManyToMany
     @JoinTable(
@@ -33,7 +40,7 @@ public class Playlist {
             joinColumns = @JoinColumn(name = "playlist_id"),
             inverseJoinColumns = @JoinColumn(name = "song_id")
     )
-    private List<Song> songs = new ArrayList<>();
+    private Set<Song> songs = new HashSet<>();
 
     @PrePersist
     public void onCreate() {

@@ -4,7 +4,6 @@ import com.scorpix.music_player.dto.request.PlaylistRequest;
 import com.scorpix.music_player.dto.response.PlaylistResponse;
 import com.scorpix.music_player.dto.response.PlaylistSummaryResponse;
 import com.scorpix.music_player.service.PlaylistService;
-import jakarta.servlet.ServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,16 +26,16 @@ public class PlaylistController {
     }
 
     @GetMapping("/playlists")
-    public ResponseEntity<List<PlaylistResponse>> getAllPlaylists() {
+    public ResponseEntity<List<PlaylistSummaryResponse>> getAllPlaylists() {
         return new ResponseEntity<>(playlistService.getAllPlaylists(), HttpStatus.OK);
     }
 
     @GetMapping("/playlists/{id}")
-    public ResponseEntity<PlaylistSummaryResponse> getPlaylistById(@PathVariable Long id) {
+    public ResponseEntity<PlaylistResponse> getPlaylistById(@PathVariable Long id) {
         return new ResponseEntity<>(playlistService.getPlaylistById(id), HttpStatus.OK);
     }
 
-    @PutMapping("/playlists/{id}/song/{songId}")
+    @PutMapping("/playlists/{id}/songs/{songId}")
     public ResponseEntity<PlaylistResponse> addSongToPlaylist(@PathVariable Long id, @PathVariable Long songId) {
         return new ResponseEntity<>(playlistService.addSongToPlaylist(id, songId), HttpStatus.CREATED);
     }
@@ -44,6 +43,12 @@ public class PlaylistController {
     @DeleteMapping("/playlists/{id}")
     public ResponseEntity<HttpStatus> deletePlaylistById(@PathVariable Long id) {
         playlistService.deletePlaylistById(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/playlists/{playlistId}/songs/{songId}")
+    public ResponseEntity<HttpStatus> deleteSongFromPlaylist(@PathVariable Long playlistId, @PathVariable Long songId) {
+        playlistService.deleteSongFromPlaylist(playlistId, songId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
