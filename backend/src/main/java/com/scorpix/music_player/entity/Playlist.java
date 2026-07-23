@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -28,11 +26,6 @@ public class Playlist {
     private String createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Integer songCount;
-
-    public int getSongCount() {
-        return songCount == null ? 0 : songs.size();
-    }
 
     @ManyToMany
     @JoinTable(

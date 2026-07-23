@@ -27,15 +27,15 @@ public class PlaylistService {
         this.songRepository = songRepository;
     }
 
-    public PlaylistSummaryResponse addPlaylist(PlaylistRequest PlaylistRequest) {
-        Playlist playlist = playlistMapper.toEntity(PlaylistRequest);
+    public PlaylistSummaryResponse addPlaylist(PlaylistRequest playlistRequest) {
+        Playlist playlist = playlistMapper.toEntity(playlistRequest);
         playlistRepository.save(playlist);
         return playlistMapper.toDto(playlist);
     }
 
-    public List<PlaylistSummaryResponse> getAllPlaylists() {
+    public List<PlaylistResponse> getAllPlaylists() {
         List<Playlist> playlists = playlistRepository.findAll();
-        return playlists.stream().map(playlistMapper::toDto).toList();
+        return playlists.stream().map(playlistMapper::toDetailDto).toList();
     }
 
     public PlaylistResponse getPlaylistById(Long id) {
@@ -47,9 +47,7 @@ public class PlaylistService {
         Playlist playlist = playlistRepository.findById(playlistId).orElseThrow(() -> new ResourceNotFoundException("No such playlist"));
         Song song = songRepository.findById(songId).orElseThrow( () -> new ResourceNotFoundException("No such song"));
 
-        if(!playlist.getSongs().contains(song)) {
-            playlist.getSongs().add(song);
-        }
+        playlist.getSongs().add(song);
 
         playlistRepository.save(playlist);
         return playlistMapper.toDetailDto(playlist);

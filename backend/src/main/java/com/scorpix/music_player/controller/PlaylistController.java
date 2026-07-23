@@ -21,12 +21,12 @@ public class PlaylistController {
     }
 
     @PostMapping("/playlists")
-    public ResponseEntity<PlaylistSummaryResponse> addPlaylist(@RequestBody PlaylistRequest PlaylistRequest) {
-        return new ResponseEntity<>(playlistService.addPlaylist(PlaylistRequest), HttpStatus.CREATED);
+    public ResponseEntity<PlaylistSummaryResponse> addPlaylist(@RequestBody PlaylistRequest playlistRequest) {
+        return new ResponseEntity<>(playlistService.addPlaylist(playlistRequest), HttpStatus.CREATED);
     }
 
     @GetMapping("/playlists")
-    public ResponseEntity<List<PlaylistSummaryResponse>> getAllPlaylists() {
+    public ResponseEntity<List<PlaylistResponse>> getAllPlaylists() {
         return new ResponseEntity<>(playlistService.getAllPlaylists(), HttpStatus.OK);
     }
 
@@ -35,7 +35,7 @@ public class PlaylistController {
         return new ResponseEntity<>(playlistService.getPlaylistById(id), HttpStatus.OK);
     }
 
-    @PutMapping("/playlists/{id}/songs/{songId}")
+    @PostMapping("/playlists/{id}/songs/{songId}")
     public ResponseEntity<PlaylistResponse> addSongToPlaylist(@PathVariable Long id, @PathVariable Long songId) {
         return new ResponseEntity<>(playlistService.addSongToPlaylist(id, songId), HttpStatus.CREATED);
     }
@@ -43,12 +43,12 @@ public class PlaylistController {
     @DeleteMapping("/playlists/{id}")
     public ResponseEntity<HttpStatus> deletePlaylistById(@PathVariable Long id) {
         playlistService.deletePlaylistById(id);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping("/playlists/{playlistId}/songs/{songId}")
     public ResponseEntity<HttpStatus> deleteSongFromPlaylist(@PathVariable Long playlistId, @PathVariable Long songId) {
         playlistService.deleteSongFromPlaylist(playlistId, songId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

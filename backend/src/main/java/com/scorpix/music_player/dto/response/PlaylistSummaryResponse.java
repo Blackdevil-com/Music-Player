@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -16,6 +18,5 @@ public class PlaylistSummaryResponse {
     private String description;
     private Boolean isPublic;
     private String createdBy;
-    private String createdAt;
-    private Integer songCount;
+    private LocalDateTime createdAt;
 }
