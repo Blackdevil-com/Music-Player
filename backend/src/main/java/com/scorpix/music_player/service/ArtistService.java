@@ -14,23 +14,26 @@ public class ArtistService {
 
     private final ArtistRepository artistRepository;
     private final ArtistMapper artistMapper;
+    private final FileStorageService fileStorageService;
 
-    public ArtistService(ArtistRepository artistRepository, ArtistMapper artistMapper) {
+    public ArtistService(ArtistRepository artistRepository, ArtistMapper artistMapper, FileStorageService fileStorageService) {
         this.artistRepository = artistRepository;
         this.artistMapper = artistMapper;
+        this.fileStorageService = fileStorageService;
     }
 
-    public ArtistDto addArtist(ArtistDto artistDto) {
-
-       Artist artist = artistMapper.toEntity(artistDto);
-       artistRepository.save(artist);
-       return artistMapper.toDto(artist);
+    public ArtistDto addArtist(ArtistDto artistDto, org.springframework.web.multipart.MultipartFile image) {
+        Artist artist = artistMapper.toEntity(artistDto);
+        if (image != null && !image.isEmpty()) {
+            artist.setImageUrl(fileStorageService.storeImageFile(image));
+        }
+        artistRepository.save(artist);
+        return artistMapper.toDto(artist);
     }
 
     public List<ArtistDto> getAllArtist() {
         List<Artist> artists = artistRepository.findAll();
-        return artists.stream().map(artist ->
-                new ArtistDto(artist.getId(), artist.getArtistName())).toList();
+        return artists.stream().map(artistMapper::toDto).toList();
     }
 
     public void deleteArtist(Long id) {

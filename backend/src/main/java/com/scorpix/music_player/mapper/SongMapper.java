@@ -11,7 +11,6 @@ public interface SongMapper {
     @Mapping(source = "id", target = "id")
     @Mapping(target = "artist", ignore = true)
     @Mapping(target = "album", ignore = true)
-    @Mapping(target = "durationSeconds", ignore = true)
     @Mapping(target = "filePath", ignore = true)
     @Mapping(target = "fileSizeBytes", ignore = true)
     @Mapping(target = "mimeType", ignore = true)

@@ -15,4 +15,5 @@ public class PlaylistRequest {
     private String description;
     private String createdBy;
     private Boolean isPublic;
+    private String coverUrl;
 }

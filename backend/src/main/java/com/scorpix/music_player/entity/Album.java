@@ -14,4 +14,5 @@ public class Album {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String albumName;
+    private String coverUrl;
 }

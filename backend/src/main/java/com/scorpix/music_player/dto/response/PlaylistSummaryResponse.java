@@ -18,5 +18,6 @@ public class PlaylistSummaryResponse {
     private String description;
     private Boolean isPublic;
     private String createdBy;
+    private String coverUrl;
     private LocalDateTime createdAt;
 }

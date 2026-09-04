@@ -10,4 +10,5 @@ public class AlbumDto {
 
     private Long id;
     private String albumName;
+    private String coverUrl;
 }

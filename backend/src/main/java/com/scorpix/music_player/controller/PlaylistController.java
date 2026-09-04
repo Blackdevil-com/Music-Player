@@ -3,9 +3,12 @@ package com.scorpix.music_player.controller;
 import com.scorpix.music_player.dto.request.PlaylistRequest;
 import com.scorpix.music_player.dto.response.PlaylistResponse;
 import com.scorpix.music_player.dto.response.PlaylistSummaryResponse;
+import com.scorpix.music_player.entity.Role;
+import com.scorpix.music_player.entity.User;
 import com.scorpix.music_player.service.PlaylistService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,9 +23,16 @@ public class PlaylistController {
         this.playlistService = playlistService;
     }
 
-    @PostMapping("/playlists")
+    @PostMapping(value = "/playlists", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PlaylistSummaryResponse> addPlaylist(@RequestBody PlaylistRequest playlistRequest) {
         return new ResponseEntity<>(playlistService.addPlaylist(playlistRequest), HttpStatus.CREATED);
+    }
+
+    @PostMapping(value = "/playlists", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PlaylistSummaryResponse> addPlaylistWithCover(
+            @RequestPart("playlistRequest") PlaylistRequest playlistRequest,
+            @RequestPart(value = "cover", required = false) org.springframework.web.multipart.MultipartFile cover) {
+        return new ResponseEntity<>(playlistService.addPlaylistWithCover(playlistRequest, cover), HttpStatus.CREATED);
     }
 
     @GetMapping("/playlists")
@@ -41,7 +51,10 @@ public class PlaylistController {
     }
 
     @DeleteMapping("/playlists/{id}")
-    public ResponseEntity<HttpStatus> deletePlaylistById(@PathVariable Long id) {
+    public ResponseEntity<?> deletePlaylistById(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        if (user == null || user.getRole() != Role.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only administrators have authority to delete playlists.");
+        }
         playlistService.deletePlaylistById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

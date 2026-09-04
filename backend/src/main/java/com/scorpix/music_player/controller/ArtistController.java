@@ -18,9 +18,17 @@ public class ArtistController {
         this.artistService = artistService;
     }
 
-    @PostMapping("/artists")
-    public ResponseEntity<ArtistDto> addArtist(@RequestBody ArtistDto artistDto) {
-        return ResponseEntity.ok(artistService.addArtist(artistDto));
+    @PostMapping(value = "/artists", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ArtistDto> addArtistMultipart(
+            @RequestPart("artistDto") ArtistDto artistDto,
+            @RequestPart(value = "image", required = false) org.springframework.web.multipart.MultipartFile image
+    ) {
+        return ResponseEntity.ok(artistService.addArtist(artistDto, image));
+    }
+
+    @PostMapping(value = "/artists", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ArtistDto> addArtistJson(@RequestBody ArtistDto artistDto) {
+        return ResponseEntity.ok(artistService.addArtist(artistDto, null));
     }
 
     @GetMapping("/artists")

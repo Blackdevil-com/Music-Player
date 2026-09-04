@@ -17,5 +17,8 @@ public class SongDto {
     private String albumName;
     private Long albumId;
     private String genre;
+    private String coverUrl;
+    private Integer durationSeconds;
+    private String lyrics;
     private LocalDateTime createAt;
 }

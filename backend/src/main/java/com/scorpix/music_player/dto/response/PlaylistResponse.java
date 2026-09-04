@@ -21,6 +21,7 @@ public class PlaylistResponse {
     private String description;
     private Boolean isPublic;
     private String createdBy;
+    private String coverUrl;
     private LocalDateTime createdAt;
 
     private Set<SongDto> songs;

@@ -17,9 +17,17 @@ public class AlbumController {
         this.albumService = albumService;
     }
 
-    @PostMapping("/albums")
-    public ResponseEntity<AlbumDto> addAlbum(@RequestBody AlbumDto albumDto) {
-        return ResponseEntity.ok(albumService.addAlbum(albumDto));
+    @PostMapping(value = "/albums", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<AlbumDto> addAlbumMultipart(
+            @RequestPart("albumDto") AlbumDto albumDto,
+            @RequestPart(value = "cover", required = false) org.springframework.web.multipart.MultipartFile cover
+    ) {
+        return ResponseEntity.ok(albumService.addAlbum(albumDto, cover));
+    }
+
+    @PostMapping(value = "/albums", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<AlbumDto> addAlbumJson(@RequestBody AlbumDto albumDto) {
+        return ResponseEntity.ok(albumService.addAlbum(albumDto, null));
     }
 
     @GetMapping("/albums")

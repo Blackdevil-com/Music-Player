@@ -37,22 +37,42 @@ public class SongService {
         this.fileStorageService = fileStorageService;
     }
 
-    public SongDto addSong(SongDto songDto, MultipartFile file) {
+    public SongDto addSong(SongDto songDto, MultipartFile file, MultipartFile cover) {
         Song song = songMapper.toEntity(songDto);
 
-        Artist artist = artistRepository.findById(songDto.getArtistId())
-                .orElseThrow(() -> new ResourceNotFoundException("Artist not found"));
-        Album album = albumRepository.findById(songDto.getAlbumId())
-                .orElseThrow(() -> new ResourceNotFoundException("Album not found"));
-
-        song.setArtist(artist);
-        song.setAlbum(album);
+        if (songDto.getArtistId() != null) {
+            Artist artist = artistRepository.findById(songDto.getArtistId()).orElse(null);
+            song.setArtist(artist);
+        }
+        if (songDto.getAlbumId() != null) {
+            Album album = albumRepository.findById(songDto.getAlbumId()).orElse(null);
+            song.setAlbum(album);
+        }
 
         FileMetaData fileMetaData = fileStorageService.storeAudioFile(file);
         song.setFilePath(fileMetaData.filePath());
         song.setFileSizeBytes(fileMetaData.fileSizeBytes());
         song.setMimeType(fileMetaData.mimeType());
+        if (songDto.getDurationSeconds() != null) {
+            song.setDurationSeconds(songDto.getDurationSeconds());
+        }
 
+        if (cover != null && !cover.isEmpty()) {
+            String coverUrl = fileStorageService.storeImageFile(cover);
+            song.setCoverUrl(coverUrl);
+        }
+
+        if (songDto.getLyrics() != null && !songDto.getLyrics().isBlank()) {
+            song.setLyrics(songDto.getLyrics());
+        }
+
+        songRepository.save(song);
+        return songMapper.toDto(song);
+    }
+
+    public SongDto updateLyrics(Long id, String lyrics) {
+        Song song = songRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No such song"));
+        song.setLyrics(lyrics);
         songRepository.save(song);
         return songMapper.toDto(song);
     }

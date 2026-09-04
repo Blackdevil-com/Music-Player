@@ -151,4 +151,52 @@ public class FileStorageService {
             throw new RuntimeException(e);
         }
     }
+
+    public String storeImageFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) return null;
+
+        String originalFileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+        String extension = "jpg";
+        int dotIndex = originalFileName.lastIndexOf('.');
+        if (dotIndex >= 0) {
+            extension = originalFileName.substring(dotIndex + 1).toLowerCase();
+        }
+
+        List<String> formatAllowed = Arrays.asList("jpg", "jpeg", "png", "webp", "gif");
+        if (!formatAllowed.contains(extension)) {
+            extension = "jpg";
+        }
+
+        String uniqueFileName = "cover_" + UUID.randomUUID() + "." + extension;
+        try {
+            Path destinationFile = Path.of(storageLocation).resolve(uniqueFileName);
+            if (!destinationFile.getParent().equals(Path.of(storageLocation))) {
+                throw new RuntimeException("Could not store file outside current destination");
+            }
+            try (InputStream streamData = file.getInputStream()) {
+                Files.copy(streamData, destinationFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            return "/api/v1/files/image/" + uniqueFileName;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store image: " + originalFileName, e);
+        }
+    }
+
+    public ResponseEntity<Resource> serveImage(String filename) {
+        try {
+            Path filePath = Path.of(storageLocation).resolve(filename);
+            if (!Files.exists(filePath)) {
+                throw new ResourceNotFoundException("Image not found: " + filename);
+            }
+            Resource resource = new FileSystemResource(filePath);
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) contentType = "image/jpeg";
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CACHE_CONTROL, "max-age=86400")
+                    .body(resource);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to serve image", e);
+        }
+    }
 }

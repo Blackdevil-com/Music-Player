@@ -20,15 +20,27 @@ public class PlaylistService {
     private final PlaylistRepository playlistRepository;
     private final PlaylistMapper playlistMapper;
     private final SongRepository songRepository;
+    private final FileStorageService fileStorageService;
 
-    public PlaylistService(PlaylistRepository playlistRepository, PlaylistMapper playlistMapper, SongRepository songRepository) {
+    public PlaylistService(PlaylistRepository playlistRepository, PlaylistMapper playlistMapper, SongRepository songRepository, FileStorageService fileStorageService) {
         this.playlistRepository = playlistRepository;
         this.playlistMapper = playlistMapper;
         this.songRepository = songRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     public PlaylistSummaryResponse addPlaylist(PlaylistRequest playlistRequest) {
         Playlist playlist = playlistMapper.toEntity(playlistRequest);
+        playlistRepository.save(playlist);
+        return playlistMapper.toDto(playlist);
+    }
+
+    public PlaylistSummaryResponse addPlaylistWithCover(PlaylistRequest playlistRequest, org.springframework.web.multipart.MultipartFile cover) {
+        Playlist playlist = playlistMapper.toEntity(playlistRequest);
+        if (cover != null && !cover.isEmpty()) {
+            String coverUrl = fileStorageService.storeImageFile(cover);
+            playlist.setCoverUrl(coverUrl);
+        }
         playlistRepository.save(playlist);
         return playlistMapper.toDto(playlist);
     }

@@ -33,6 +33,9 @@ public class Song {
     private Long fileSizeBytes;
     private String mimeType;
     private String genre;
+    private String coverUrl;
+    @Column(columnDefinition = "TEXT")
+    private String lyrics;
     private Long playCount;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

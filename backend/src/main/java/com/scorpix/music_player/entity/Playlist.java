@@ -24,6 +24,7 @@ public class Playlist {
     private String description;
     private Boolean isPublic;
     private String createdBy;
+    private String coverUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
